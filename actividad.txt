@@ -1,0 +1,257 @@
+MacBook-Pro-de-Erika:PSql Ekika$ psql
+psql (10.4)
+Type "help" for help.
+
+Ekika=# \du
+                                     List of roles
+  Role name   |                         Attributes                         | Member of 
+--------------+------------------------------------------------------------+-----------
+ Ekika        | Superuser, Create role, Create DB                          | {}
+ desafiolatam |                                                            | {}
+ postgres     | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+
+Ekika=# \q
+MacBook-Pro-de-Erika:PSql Ekika$ cd ..
+MacBook-Pro-de-Erika:exp_online-16 Ekika$ cd ..
+MacBook-Pro-de-Erika:semana_16 Ekika$ cd exp_presencial-31/
+MacBook-Pro-de-Erika:exp_presencial-31 Ekika$ psql
+psql (10.4)
+Type "help" for help.
+
+Ekika=# CREATE USER avalos_erika
+Ekika-# ;
+CREATE ROLE
+Ekika=# \du
+                                     List of roles
+  Role name   |                         Attributes                         | Member of 
+--------------+------------------------------------------------------------+-----------
+ Ekika        | Superuser, Create role, Create DB                          | {}
+ avalos_erika |                                                            | {}
+ desafiolatam |                                                            | {}
+ postgres     | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+
+Ekika=# ALTER USER avalos_erika WITH superuser;
+ALTER ROLE
+Ekika=# \du
+                                     List of roles
+  Role name   |                         Attributes                         | Member of 
+--------------+------------------------------------------------------------+-----------
+ Ekika        | Superuser, Create role, Create DB                          | {}
+ avalos_erika | Superuser                                                  | {}
+ desafiolatam |                                                            | {}
+ postgres     | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+
+Ekika=# CREATE DATABASE call_list
+Ekika-# ;
+CREATE DATABASE
+Ekika=# \l
+                                   List of databases
+     Name     |  Owner   | Encoding |   Collate   |    Ctype    |   Access privileges   
+--------------+----------+----------+-------------+-------------+-----------------------
+ Ekika        | Ekika    | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+ call_list    | Ekika    | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+ desafiolatam | Ekika    | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+ postgres     | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+ template0    | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+              |          |          |             |             | postgres=CTc/postgres
+ template1    | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+              |          |          |             |             | postgres=CTc/postgres
+(6 rows)
+
+Ekika=# \c call_list
+You are now connected to database "call_list" as user "Ekika".
+call_list=# CREATE TABLE users (id SERIAL PRIMARY KEY, first_name VARCHAR(50), email TEXT);
+CREATE TABLE
+call_list=# \d call_list
+Did not find any relation named "call_list".
+call_list=# \dt
+       List of relations
+ Schema | Name  | Type  | Owner 
+--------+-------+-------+-------
+ public | users | table | Ekika
+(1 row)
+
+call_list=# \d call_list
+Did not find any relation named "call_list".
+call_list=# SELECT * FROM call_list
+call_list-# ;
+ERROR:  relation "call_list" does not exist
+LINE 1: SELECT * FROM call_list
+                      ^
+call_list=# \d users
+                                     Table "public.users"
+   Column   |         Type          | Collation | Nullable |              Default              
+------------+-----------------------+-----------+----------+-----------------------------------
+ id         | integer               |           | not null | nextval('users_id_seq'::regclass)
+ first_name | character varying(50) |           |          | 
+ email      | text                  |           |          | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+
+call_list=# INSERT INTO users (first_name, email) values ('Carlos', 'carlos@yo.cl');
+INSERT 0 1
+call_list=# INSERT INTO users (first_name, email) values ('Laura', 'laura@mi_sitio.cl');
+INSERT 0 1
+call_list=# SELECT * FROM users;
+ id | first_name |       email       
+----+------------+-------------------
+  1 | Carlos     | carlos@yo.cl
+  2 | Laura      | laura@mi_sitio.cl
+(2 rows)
+
+call_list=# CREATE TABLE calls (id SERIAL PRIMARY KEY, phone VARCHAR(15), date TIMESTAMP, user_id integer REFERENCES users (id));
+CREATE TABLE
+call_list=# \d calls
+                                       Table "public.calls"
+ Column  |            Type             | Collation | Nullable |              Default              
+---------+-----------------------------+-----------+----------+-----------------------------------
+ id      | integer                     |           | not null | nextval('calls_id_seq'::regclass)
+ phone   | character varying(15)       |           |          | 
+ date    | timestamp without time zone |           |          | 
+ user_id | integer                     |           |          | 
+Indexes:
+    "calls_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "calls_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+
+call_list=# ALTER TABLE users ADD COLUMN last_name text;
+ALTER TABLE
+call_list=# \d users
+                                     Table "public.users"
+   Column   |         Type          | Collation | Nullable |              Default              
+------------+-----------------------+-----------+----------+-----------------------------------
+ id         | integer               |           | not null | nextval('users_id_seq'::regclass)
+ first_name | character varying(50) |           |          | 
+ email      | text                  |           |          | 
+ last_name  | text                  |           |          | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+Referenced by:
+    TABLE "calls" CONSTRAINT "calls_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+
+call_list=# UPDATE users SET last_name = 'Contreras' WHERE name = 'Carlos';
+ERROR:  column "name" does not exist
+LINE 1: UPDATE users SET last_name = 'Contreras' WHERE name = 'Carlo...
+                                                       ^
+call_list=# UPDATE users SET last_name = 'Contreras' WHERE first_name = 'Carlos';
+UPDATE 1
+call_list=# UPDATE users SET last_name = 'Duarte' WHERE first_name = 'Laura';
+UPDATE 1
+call_list=# \d users
+                                     Table "public.users"
+   Column   |         Type          | Collation | Nullable |              Default              
+------------+-----------------------+-----------+----------+-----------------------------------
+ id         | integer               |           | not null | nextval('users_id_seq'::regclass)
+ first_name | character varying(50) |           |          | 
+ email      | text                  |           |          | 
+ last_name  | text                  |           |          | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+Referenced by:
+    TABLE "calls" CONSTRAINT "calls_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+
+call_list=# SELECT * FROM users;
+ id | first_name |       email       | last_name 
+----+------------+-------------------+-----------
+  1 | Carlos     | carlos@yo.cl      | Contreras
+  2 | Laura      | laura@mi_sitio.cl | Duarte
+(2 rows)
+
+call_list=# INSERT INTO calls (phone, date, user_id) VALUES ('+56982579825','01/07/2018', '1'), ('+56982579825','02/07/2018', '1'), ('+56982579825','03/07/2018', '1'), ('+56982579825','04/07/2018', '2');
+INSERT 0 4
+call_list=# INSERT INTO calls (phone, date, user_id) VALUES ('+56981848655','28/06/2018', '2'), ('+56982579825','04/07/2018', '1'), ('+56981848655','29/06/2018', '2'), ('+56981848655','30/06/2018', '2'), ('+56981848655','01/07/2018', '2'), ('+56981848655','02/06/2018', '2');
+ERROR:  date/time field value out of range: "28/06/2018"
+LINE 1: ...lls (phone, date, user_id) VALUES ('+56981848655','28/06/201...
+                                                             ^
+HINT:  Perhaps you need a different "datestyle" setting.
+call_list=# INSERT INTO calls (phone, date, user_id) VALUES ('+56981848655','28/06/2018', '2'), ('+56982579825','04/07/2018', '1'), ('+56981848655','29/06/2018', '2'), ('+56981848655','30/06/2018', '2'), ('+56981848655','01/07/2018', '2'), ('+56981848655','02/07/2018', '2');
+ERROR:  date/time field value out of range: "28/06/2018"
+LINE 1: ...lls (phone, date, user_id) VALUES ('+56981848655','28/06/201...
+                                                             ^
+HINT:  Perhaps you need a different "datestyle" setting.
+call_list=# INSERT INTO calls (phone, date, user_id) VALUES ('+56981848655','01/07/2018', '2'), ('+56982579825','04/07/2018', '1'), ('+56981848655','02/07/2018', '2'), ('+56981848655','03/07/2018', '2'), ('+56981848655','05/07/2018', '2'), ('+56981848655','06/07/2018', '2');
+INSERT 0 6
+call_list=# SELECT * FROM users;
+ id | first_name |       email       | last_name 
+----+------------+-------------------+-----------
+  1 | Carlos     | carlos@yo.cl      | Contreras
+  2 | Laura      | laura@mi_sitio.cl | Duarte
+(2 rows)
+
+call_list=# SELECT * FROM calls;
+ id |    phone     |        date         | user_id 
+----+--------------+---------------------+---------
+  1 | +56982579825 | 2018-01-07 00:00:00 |       1
+  2 | +56982579825 | 2018-02-07 00:00:00 |       1
+  3 | +56982579825 | 2018-03-07 00:00:00 |       1
+  4 | +56982579825 | 2018-04-07 00:00:00 |       2
+  5 | +56981848655 | 2018-01-07 00:00:00 |       2
+  6 | +56982579825 | 2018-04-07 00:00:00 |       1
+  7 | +56981848655 | 2018-02-07 00:00:00 |       2
+  8 | +56981848655 | 2018-03-07 00:00:00 |       2
+  9 | +56981848655 | 2018-05-07 00:00:00 |       2
+ 10 | +56981848655 | 2018-06-07 00:00:00 |       2
+(10 rows)
+
+call_list=# INSERT INTO calls (first_name, email, last_name) VALUES ('Andrea', 'andrea@leon.cl', 'Leon');
+ERROR:  column "first_name" of relation "calls" does not exist
+LINE 1: INSERT INTO calls (first_name, email, last_name) VALUES ('An...
+                           ^
+call_list=# INSERT INTO users (first_name, email, last_name) VALUES ('Andrea', 'andrea@leon.cl', 'Leon');
+INSERT 0 1
+call_list=# SELECT * FROM users;
+ id | first_name |       email       | last_name 
+----+------------+-------------------+-----------
+  1 | Carlos     | carlos@yo.cl      | Contreras
+  2 | Laura      | laura@mi_sitio.cl | Duarte
+  3 | Andrea     | andrea@leon.cl    | Leon
+(3 rows)
+
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id);
+ id | first_name |       email       | last_name | id |    phone     |        date         | user_id 
+----+------------+-------------------+-----------+----+--------------+---------------------+---------
+  1 | Carlos     | carlos@yo.cl      | Contreras |  1 | +56982579825 | 2018-01-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl      | Contreras |  2 | +56982579825 | 2018-02-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl      | Contreras |  3 | +56982579825 | 2018-03-07 00:00:00 |       1
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  4 | +56982579825 | 2018-04-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  5 | +56981848655 | 2018-01-07 00:00:00 |       2
+  1 | Carlos     | carlos@yo.cl      | Contreras |  6 | +56982579825 | 2018-04-07 00:00:00 |       1
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  7 | +56981848655 | 2018-02-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  8 | +56981848655 | 2018-03-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  9 | +56981848655 | 2018-05-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    | 10 | +56981848655 | 2018-06-07 00:00:00 |       2
+(10 rows)
+
+call_list=# SELECT phone, COUNT(phone) FROM calls GROUP BY phone;
+    phone     | count 
+--------------+-------
+ +56981848655 |     5
+ +56982579825 |     5
+(2 rows)
+
+call_list=# SELECT user_id, COUNT(user_id) FROM calls GROUP BY user_id;
+ user_id | count 
+---------+-------
+       2 |     6
+       1 |     4
+(2 rows)
+
+call_list=# SELECT first_name, count(user_id) FROM users FULL JOIN calls ON (users.id = calls.user_id) GROUP BY users.first_name;
+ first_name | count 
+------------+-------
+ Carlos     |     4
+ Andrea     |     0
+ Laura      |     6
+(3 rows)
+
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id) WHERE first_name = 'Carlos' ORDER BY date DESC;
+ id | first_name |    email     | last_name | id |    phone     |        date         | user_id 
+----+------------+--------------+-----------+----+--------------+---------------------+---------
+  1 | Carlos     | carlos@yo.cl | Contreras |  6 | +56982579825 | 2018-04-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl | Contreras |  3 | +56982579825 | 2018-03-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl | Contreras |  2 | +56982579825 | 2018-02-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl | Contreras |  1 | +56982579825 | 2018-01-07 00:00:00 |       1
+(4 rows)
+
+call_list=# CREATE TABLE auditoria (id SERIAL, motivo text, usuario varchar(50));
+CREATE TABLE

@@ -1,0 +1,257 @@
+MacBook-Pro-de-Erika:exp_presencial-31 Ekika$ psql
+psql (10.4)
+Type "help" for help.
+
+Ekika=# \c call_list
+You are now connected to database "call_list" as user "Ekika".
+call_list=# SELECT COUNT(*) FROM calls;
+ count 
+-------
+    10
+(1 row)
+
+call_list=# SELECT COUNT(*) FROM calls WHERE user_id = id;
+ count 
+-------
+     1
+(1 row)
+
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id);
+ id | first_name |       email       | last_name | id |    phone     |        date         | user_id 
+----+------------+-------------------+-----------+----+--------------+---------------------+---------
+  1 | Carlos     | carlos@yo.cl      | Contreras |  1 | +56982579825 | 2018-01-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl      | Contreras |  2 | +56982579825 | 2018-02-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl      | Contreras |  3 | +56982579825 | 2018-03-07 00:00:00 |       1
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  4 | +56982579825 | 2018-04-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  5 | +56981848655 | 2018-01-07 00:00:00 |       2
+  1 | Carlos     | carlos@yo.cl      | Contreras |  6 | +56982579825 | 2018-04-07 00:00:00 |       1
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  7 | +56981848655 | 2018-02-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  8 | +56981848655 | 2018-03-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  9 | +56981848655 | 2018-05-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    | 10 | +56981848655 | 2018-06-07 00:00:00 |       2
+(10 rows)
+
+call_list=# SELECT phone, count(first_name) FROM users GROUP BY first_name;
+ERROR:  column "phone" does not exist
+LINE 1: SELECT phone, count(first_name) FROM users GROUP BY first_na...
+               ^
+call_list=# SELECT first_name, phone, count(phone) FROM users, calls GROUP BY first_name;
+ERROR:  column "calls.phone" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT first_name, phone, count(phone) FROM users, calls GRO...
+                           ^
+call_list=# SELECT first_name, phone, count(phone) FROM users, calls.phone GROUP BY first_name;
+ERROR:  relation "calls.phone" does not exist
+LINE 1: ...ELECT first_name, phone, count(phone) FROM users, calls.phon...
+                                                             ^
+call_list=# SELECT phone, count(phone) FROM users, calls GROUP BY first_name;
+ERROR:  column "calls.phone" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT phone, count(phone) FROM users, calls GROUP BY first_...
+               ^
+call_list=# SELECT users.first_name, calls.phone, count(calls.phone) FROM users, calls GROUP BY users.first_name;
+ERROR:  column "calls.phone" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT users.first_name, calls.phone, count(calls.phone) FRO...
+                                 ^
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id) GROUP BY user_id;
+ERROR:  column "users.id" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT * FROM users INNER JOIN calls ON (users.id = calls.us...
+               ^
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id) GROUP BY first_name;
+ERROR:  column "users.id" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT * FROM users INNER JOIN calls ON (users.id = calls.us...
+               ^
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id) GROUP BY user.first_name;
+ERROR:  syntax error at or near "."
+LINE 1: ... calls ON (users.id = calls.user_id) GROUP BY user.first_nam...
+                                                             ^
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id) GROUP BY first_name;
+ERROR:  column "users.id" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT * FROM users INNER JOIN calls ON (users.id = calls.us...
+               ^
+call_list=# SELECT phone, COUNT(phone) FROM calls GROUP BY phone;
+    phone     | count 
+--------------+-------
+ +56981848655 |     5
+ +56982579825 |     5
+(2 rows)
+
+call_list=# SELECT phone, COUNT(phone) FROM calls GROUP BY user_id;
+ERROR:  column "calls.phone" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT phone, COUNT(phone) FROM calls GROUP BY user_id;
+               ^
+call_list=# SELECT user_id, COUNT(user_id) FROM calls GROUP BY user_id;
+ user_id | count 
+---------+-------
+       2 |     6
+       1 |     4
+(2 rows)
+
+call_list=# SELECT calls.user_id, users.first_name, COUNT(user_id) FROM calls GROUP BY user_id;
+ERROR:  missing FROM-clause entry for table "users"
+LINE 1: SELECT calls.user_id, users.first_name, COUNT(user_id) FROM ...
+                              ^
+call_list=# SELECT calls.user_id, users.first_name, COUNT(user_id) FROM calls, users  GROUP BY user_id;
+ERROR:  column "users.first_name" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT calls.user_id, users.first_name, COUNT(user_id) FROM ...
+                              ^
+call_list=# SELECT user_id, COUNT(user_id) FROM calls, users INNER JOIN calls ON (users.id = calls.user_id);
+ERROR:  table name "calls" specified more than once
+call_list=# SELECT calls.user_id, users.first_name, COUNT(user_id) FROM calls, users  GROUP BY user_id;
+ERROR:  column "users.first_name" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT calls.user_id, users.first_name, COUNT(user_id) FROM ...
+                              ^
+call_list=# SELECT calls.user_id, users.first_name, COUNT(user_id) FROM calls, users  GROUP BY user_id;
+ERROR:  column "users.first_name" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT calls.user_id, users.first_name, COUNT(user_id) FROM ...
+                              ^
+call_list=# SELECT calls.user_id, users.first_name, COUNT(user_id) FROM calls, users  GROUP BY user_id;
+ERROR:  column "users.first_name" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT calls.user_id, users.first_name, COUNT(user_id) FROM ...
+                              ^
+call_list=# SELECT calls.user_id, users.first_name, COUNT(user_id) FROM calls GROUP BY user_id;
+ERROR:  missing FROM-clause entry for table "users"
+LINE 1: SELECT calls.user_id, users.first_name, COUNT(user_id) FROM ...
+                              ^
+call_list=# SELECT user_id, COUNT(user_id) FROM calls GROUP BY user_id;
+ user_id | count 
+---------+-------
+       2 |     6
+       1 |     4
+(2 rows)
+
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id);
+ id | first_name |       email       | last_name | id |    phone     |        date         | user_id 
+----+------------+-------------------+-----------+----+--------------+---------------------+---------
+  1 | Carlos     | carlos@yo.cl      | Contreras |  1 | +56982579825 | 2018-01-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl      | Contreras |  2 | +56982579825 | 2018-02-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl      | Contreras |  3 | +56982579825 | 2018-03-07 00:00:00 |       1
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  4 | +56982579825 | 2018-04-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  5 | +56981848655 | 2018-01-07 00:00:00 |       2
+  1 | Carlos     | carlos@yo.cl      | Contreras |  6 | +56982579825 | 2018-04-07 00:00:00 |       1
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  7 | +56981848655 | 2018-02-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  8 | +56981848655 | 2018-03-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  9 | +56981848655 | 2018-05-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    | 10 | +56981848655 | 2018-06-07 00:00:00 |       2
+(10 rows)
+
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id) GROUP BY user_id;
+ERROR:  column "users.id" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT * FROM users INNER JOIN calls ON (users.id = calls.us...
+               ^
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id) GROUP BY calls.user_id;
+ERROR:  column "users.id" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT * FROM users INNER JOIN calls ON (users.id = calls.us...
+               ^
+call_list=# SELECT user_id, COUNT(user_id) FROM calls GROUP BY user_id;
+ user_id | count 
+---------+-------
+       2 |     6
+       1 |     4
+(2 rows)
+
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id);
+ id | first_name |       email       | last_name | id |    phone     |        date         | user_id 
+----+------------+-------------------+-----------+----+--------------+---------------------+---------
+  1 | Carlos     | carlos@yo.cl      | Contreras |  1 | +56982579825 | 2018-01-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl      | Contreras |  2 | +56982579825 | 2018-02-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl      | Contreras |  3 | +56982579825 | 2018-03-07 00:00:00 |       1
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  4 | +56982579825 | 2018-04-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  5 | +56981848655 | 2018-01-07 00:00:00 |       2
+  1 | Carlos     | carlos@yo.cl      | Contreras |  6 | +56982579825 | 2018-04-07 00:00:00 |       1
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  7 | +56981848655 | 2018-02-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  8 | +56981848655 | 2018-03-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  9 | +56981848655 | 2018-05-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    | 10 | +56981848655 | 2018-06-07 00:00:00 |       2
+(10 rows)
+
+call_list=# SELECT user_id, COUNT(user_id) FROM calls GROUP BY user_id;
+ user_id | count 
+---------+-------
+       2 |     6
+       1 |     4
+(2 rows)
+
+call_list=# SELECT first_name, count(user_id) FROM users FULL JOINS ON (users.id = calls.user_id) GROUP BY frist_name;
+ERROR:  syntax error at or near "JOINS"
+LINE 1: SELECT first_name, count(user_id) FROM users FULL JOINS ON (...
+                                                          ^
+call_list=# SELECT first_name, count(user_id) FROM users FULL JOIN ON (users.id = calls.user_id) GROUP BY frist_name;
+ERROR:  syntax error at or near "ON"
+LINE 1: ...T first_name, count(user_id) FROM users FULL JOIN ON (users....
+                                                             ^
+call_list=# SELECT first_name, count(user_id) FROM users FULL JOIN calls ON (users.id = calls.user_id) GROUP BY frist_name;
+ERROR:  column "frist_name" does not exist
+LINE 1: ...JOIN calls ON (users.id = calls.user_id) GROUP BY frist_name...
+                                                             ^
+HINT:  Perhaps you meant to reference the column "users.first_name".
+call_list=# SELECT first_name, count(user_id) FROM users FULL JOIN calls ON (users.id = calls.user_id) GROUP BY users.frist_name;
+ERROR:  column users.frist_name does not exist
+LINE 1: ...JOIN calls ON (users.id = calls.user_id) GROUP BY users.fris...
+                                                             ^
+HINT:  Perhaps you meant to reference the column "users.first_name".
+call_list=# SELECT first_name, count(user_id) FROM users FULL JOIN calls ON (users.id = calls.user_id) GROUP BY users.first_name;
+ first_name | count 
+------------+-------
+ Carlos     |     4
+ Andrea     |     0
+ Laura      |     6
+(3 rows)
+
+call_list=# SELECT first_name, count(user_id) FROM users INNER JOIN calls ON (users.id = calls.user_id) GROUP BY users.first_name;
+ first_name | count 
+------------+-------
+ Carlos     |     4
+ Laura      |     6
+(2 rows)
+
+call_list=# SELECT first_name, count(user_id) FROM users INNER JOIN calls ON (users.id = calls.user_id) GROUP BY users.first_name WHERE SELECT first_name, count(user_id) FROM users FULL JOIN calls ON (users.id = calls.user_id) GROUP BY users.first_name;
+ERROR:  syntax error at or near "WHERE"
+LINE 1: ...ers.id = calls.user_id) GROUP BY users.first_name WHERE SELE...
+                                                             ^
+call_list=# SELECT first_name, count(user_id) FROM users INNER JOIN calls ON (users.id = calls.user_id) GROUP BY users.first_name WHERE users.first_name = 'Carlos';
+ERROR:  syntax error at or near "WHERE"
+LINE 1: ...ers.id = calls.user_id) GROUP BY users.first_name WHERE user...
+                                                             ^
+call_list=# SELECT first_name, count(user_id) FROM users INNER JOIN calls ON (users.id = calls.user_id) WHERE users.first_name = 'Carlos';
+ERROR:  column "users.first_name" must appear in the GROUP BY clause or be used in an aggregate function
+LINE 1: SELECT first_name, count(user_id) FROM users INNER JOIN call...
+               ^
+call_list=# SELECT first_name, count(user_id) FROM users INNER JOIN calls ON (users.id = calls.user_id) WHERE users.first_name = 'Carlos' GROUP BY users.first_name;
+ first_name | count 
+------------+-------
+ Carlos     |     4
+(1 row)
+
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id);
+ id | first_name |       email       | last_name | id |    phone     |        date         | user_id 
+----+------------+-------------------+-----------+----+--------------+---------------------+---------
+  1 | Carlos     | carlos@yo.cl      | Contreras |  1 | +56982579825 | 2018-01-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl      | Contreras |  2 | +56982579825 | 2018-02-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl      | Contreras |  3 | +56982579825 | 2018-03-07 00:00:00 |       1
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  4 | +56982579825 | 2018-04-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  5 | +56981848655 | 2018-01-07 00:00:00 |       2
+  1 | Carlos     | carlos@yo.cl      | Contreras |  6 | +56982579825 | 2018-04-07 00:00:00 |       1
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  7 | +56981848655 | 2018-02-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  8 | +56981848655 | 2018-03-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    |  9 | +56981848655 | 2018-05-07 00:00:00 |       2
+  2 | Laura      | laura@mi_sitio.cl | Duarte    | 10 | +56981848655 | 2018-06-07 00:00:00 |       2
+(10 rows)
+
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id) WHERE first_name = 'Carlos';
+ id | first_name |    email     | last_name | id |    phone     |        date         | user_id 
+----+------------+--------------+-----------+----+--------------+---------------------+---------
+  1 | Carlos     | carlos@yo.cl | Contreras |  1 | +56982579825 | 2018-01-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl | Contreras |  2 | +56982579825 | 2018-02-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl | Contreras |  3 | +56982579825 | 2018-03-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl | Contreras |  6 | +56982579825 | 2018-04-07 00:00:00 |       1
+(4 rows)
+
+call_list=# SELECT * FROM users INNER JOIN calls ON (users.id = calls.user_id) WHERE first_name = 'Carlos' ORDER BY date DESC;
+ id | first_name |    email     | last_name | id |    phone     |        date         | user_id 
+----+------------+--------------+-----------+----+--------------+---------------------+---------
+  1 | Carlos     | carlos@yo.cl | Contreras |  6 | +56982579825 | 2018-04-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl | Contreras |  3 | +56982579825 | 2018-03-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl | Contreras |  2 | +56982579825 | 2018-02-07 00:00:00 |       1
+  1 | Carlos     | carlos@yo.cl | Contreras |  1 | +56982579825 | 2018-01-07 00:00:00 |       1
+(4 rows)
+
+call_list=#
